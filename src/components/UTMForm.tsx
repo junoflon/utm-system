@@ -397,7 +397,7 @@ export default function UTMForm({ onCreated }: Props) {
               type="text"
               value={utmCampaign}
               onChange={e => setUtmCampaign(e.target.value)}
-              placeholder="#캠페인번호_#광고세트번호 (예: #1-1_#1-2 / 최대 50자)"
+              placeholder="캠페인번호/광고세트번호 (예: 1-1/1-2 / 최대 50자)"
               maxLength={50}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
