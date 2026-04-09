@@ -14,8 +14,24 @@ export async function GET(request: NextRequest) {
   const content = searchParams.get('content') || '';
   const brand = searchParams.get('brand') || '';
   const product = searchParams.get('product') || '';
+  const search = searchParams.get('search') || '';
 
   let tags = getAllTags();
+
+  // Apply search
+  if (search) {
+    const q = search.toLowerCase();
+    tags = tags.filter(t =>
+      t.title.toLowerCase().includes(q) ||
+      t.utmSource.toLowerCase().includes(q) ||
+      t.utmMedium.toLowerCase().includes(q) ||
+      t.utmCampaign.toLowerCase().includes(q) ||
+      t.utmContent.toLowerCase().includes(q) ||
+      t.brand.toLowerCase().includes(q) ||
+      t.product.toLowerCase().includes(q) ||
+      t.generatedUrl.toLowerCase().includes(q)
+    );
+  }
 
   // Apply filters
   if (source) tags = tags.filter(t => t.utmSource === source);

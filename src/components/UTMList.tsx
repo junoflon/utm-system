@@ -31,6 +31,7 @@ export default function UTMList({ refreshKey }: Props) {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [limit, setLimit] = useState(20);
+  const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Filters>({
     source: '', medium: '', campaign: '', content: '', brand: '', product: '',
   });
@@ -55,6 +56,7 @@ export default function UTMList({ refreshKey }: Props) {
       ...(filters.content && { content: filters.content }),
       ...(filters.brand && { brand: filters.brand }),
       ...(filters.product && { product: filters.product }),
+      ...(search && { search }),
     });
     const res = await fetch(`/api/utm?${params}`);
     if (res.ok) {
@@ -63,7 +65,7 @@ export default function UTMList({ refreshKey }: Props) {
       setTotal(data.total);
       setTotalPages(data.totalPages);
     }
-  }, [page, limit, filters]);
+  }, [page, limit, filters, search]);
 
   useEffect(() => { fetchFilters(); }, [fetchFilters, refreshKey]);
   useEffect(() => { fetchTags(); }, [fetchTags, refreshKey]);
@@ -98,6 +100,17 @@ export default function UTMList({ refreshKey }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* Search */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <input
+          type="text"
+          value={search}
+          onChange={e => { setSearch(e.target.value); setPage(1); }}
+          placeholder="태그 제목, URL, 캠페인, 콘텐츠 등으로 검색..."
+          className="w-full px-4 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+
       {/* Filters */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         <div className="flex flex-wrap gap-3 items-center">
