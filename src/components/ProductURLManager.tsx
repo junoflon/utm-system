@@ -15,19 +15,27 @@ interface ProductUrl {
 const BRANDS = ['지노큐어', '바디파인', '파인톱', '페아체도', '와이와이와이랩'];
 
 export default function ProductURLManager() {
-  const [urls, setUrls] = useState<ProductUrl[]>([]);
+  const [allUrls, setAllUrls] = useState<ProductUrl[]>([]);
   const [selectedBrand, setSelectedBrand] = useState(BRANDS[0]);
+  const [selectedTag, setSelectedTag] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<ProductUrl>>({});
   const [showAdd, setShowAdd] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', tags: '', url: '', note: '' });
 
+  // All unique tags for the current brand
+  const tagOptions = Array.from(new Set(allUrls.flatMap(u => u.tags))).sort();
+
+  // Filtered URLs
+  const urls = selectedTag ? allUrls.filter(u => u.tags.includes(selectedTag)) : allUrls;
+
   const fetchUrls = useCallback(async () => {
     const res = await fetch(`/api/product-urls?brand=${encodeURIComponent(selectedBrand)}`);
-    if (res.ok) setUrls(await res.json());
+    if (res.ok) setAllUrls(await res.json());
   }, [selectedBrand]);
 
   useEffect(() => { fetchUrls(); }, [fetchUrls]);
+  useEffect(() => { setSelectedTag(''); }, [selectedBrand]);
 
   const handleAdd = async () => {
     if (!newItem.name || !newItem.url) return;
@@ -100,9 +108,44 @@ export default function ProductURLManager() {
         </div>
       </div>
 
+      {/* Tag sub-filters */}
+      {tagOptions.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-3">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedTag('')}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                !selectedTag ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              전체 ({allUrls.length})
+            </button>
+            {tagOptions.map(tag => {
+              const count = allUrls.filter(u => u.tags.includes(tag)).length;
+              return (
+                <button
+                  key={tag}
+                  onClick={() => setSelectedTag(selectedTag === tag ? '' : tag)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    selectedTag === tag
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                  }`}
+                >
+                  {tag} ({count})
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Header + Add button */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">{selectedBrand} 제품 URL ({urls.length}건)</h3>
+        <h3 className="text-lg font-semibold text-gray-900">
+          {selectedBrand} 제품 URL ({urls.length}건)
+          {selectedTag && <span className="text-sm font-normal text-blue-600 ml-2">#{selectedTag}</span>}
+        </h3>
         <button onClick={() => setShowAdd(!showAdd)}
           className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors">
           + 새 URL 추가
