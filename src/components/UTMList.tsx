@@ -39,7 +39,6 @@ export default function UTMList({ refreshKey }: Props) {
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     sources: [], mediums: [], campaigns: [], terms: [], contents: [], brands: [], products: [],
   });
-  const [syncing, setSyncing] = useState(false);
 
   const fetchFilters = useCallback(async () => {
     const res = await fetch('/api/utm/filters');
@@ -90,23 +89,6 @@ export default function UTMList({ refreshKey }: Props) {
     alert('URL이 클립보드에 복사되었습니다.');
   };
 
-  const handleSync = async () => {
-    setSyncing(true);
-    try {
-      const res = await fetch('/api/sheets/sync', { method: 'POST' });
-      const data = await res.json();
-      if (res.ok) {
-        alert(`Google Sheets 동기화 완료! (${data.synced}건)`);
-      } else {
-        alert(`동기화 실패: ${data.error}`);
-      }
-    } catch {
-      alert('동기화 중 오류가 발생했습니다.');
-    } finally {
-      setSyncing(false);
-    }
-  };
-
   const handleSearch = () => {
     setPage(1);
     fetchTags();
@@ -148,10 +130,6 @@ export default function UTMList({ refreshKey }: Props) {
               <option value={20}>20개씩 보기</option>
               <option value={50}>50개씩 보기</option>
             </select>
-            <button onClick={handleSync} disabled={syncing}
-              className="px-4 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 disabled:opacity-50 transition-colors">
-              {syncing ? '동기화 중...' : 'Google Sheets 동기화'}
-            </button>
           </div>
         </div>
       </div>

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getAllTags, addTag, deleteTag } from '@/lib/store';
-import { appendToSheet, deleteFromSheet } from '@/lib/sheets';
 import { UTMTag } from '@/types/utm';
 
 export async function GET(request: NextRequest) {
@@ -72,13 +71,6 @@ export async function POST(request: NextRequest) {
 
   addTag(tag);
 
-  // Try Google Sheets sync (non-blocking)
-  try {
-    await appendToSheet(tag);
-  } catch (e) {
-    console.warn('Google Sheets 동기화 실패:', e);
-  }
-
   return NextResponse.json(tag, { status: 201 });
 }
 
@@ -91,12 +83,6 @@ export async function DELETE(request: NextRequest) {
   const deleted = deleteTag(id);
   if (!deleted) {
     return NextResponse.json({ error: '태그를 찾을 수 없습니다.' }, { status: 404 });
-  }
-
-  try {
-    await deleteFromSheet(id);
-  } catch (e) {
-    console.warn('Google Sheets 삭제 실패:', e);
   }
 
   return NextResponse.json({ success: true });
