@@ -23,7 +23,7 @@ export default function UTMForm({ onCreated }: Props) {
   const [utmMedium, setUtmMedium] = useState('');
   const [customMedium, setCustomMedium] = useState('');
   const [utmCampaign, setUtmCampaign] = useState('');
-  const [utmTerm, setUtmTerm] = useState('');
+
   const [utmContent, setUtmContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -81,17 +81,16 @@ export default function UTMForm({ onCreated }: Props) {
       if (effectiveSource) url.searchParams.set('utm_source', effectiveSource);
       if (effectiveMedium) url.searchParams.set('utm_medium', effectiveMedium);
       if (utmCampaign) url.searchParams.set('utm_campaign', utmCampaign);
-      if (utmTerm) url.searchParams.set('utm_term', utmTerm);
       if (utmContent) url.searchParams.set('utm_content', utmContent);
       return url.toString();
     } catch {
       return '';
     }
-  }, [landingUrl, effectiveSource, effectiveMedium, utmCampaign, utmTerm, utmContent]);
+  }, [landingUrl, effectiveSource, effectiveMedium, utmCampaign, utmContent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !landingUrl || !effectiveSource || !effectiveMedium) return;
+    if (!title || !landingUrl || !effectiveSource || !effectiveMedium || !utmCampaign || !utmContent) return;
 
     setSubmitting(true);
     try {
@@ -102,14 +101,14 @@ export default function UTMForm({ onCreated }: Props) {
         body: JSON.stringify({
           title, landingUrl: finalUrl, brand, product,
           utmSource: effectiveSource, utmMedium: effectiveMedium,
-          utmCampaign, utmTerm, utmContent,
+          utmCampaign, utmTerm: '', utmContent,
         }),
       });
       if (res.ok) {
         // Reset form
         setTitle(''); setLandingUrl(''); setBrand(''); setProduct('');
         setUtmSource(''); setCustomSource(''); setUtmMedium(''); setCustomMedium('');
-        setUtmCampaign(''); setUtmTerm(''); setUtmContent('');
+        setUtmCampaign(''); setUtmContent('');
         setShowNewBrand(false); setShowNewProduct(false);
         fetchOptions();
         onCreated();
@@ -367,7 +366,9 @@ export default function UTMForm({ onCreated }: Props) {
 
           {/* utm_campaign */}
           <div className="grid grid-cols-[180px_1fr] items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">utm_campaign (캠페인)</label>
+            <label className="text-sm font-medium text-gray-700">
+              utm_campaign (캠페인) <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               value={utmCampaign}
@@ -375,25 +376,15 @@ export default function UTMForm({ onCreated }: Props) {
               placeholder="#캠페인번호_#광고세트번호 (예: #1-1_#1-2 / 최대 50자)"
               maxLength={50}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* utm_term */}
-          <div className="grid grid-cols-[180px_1fr] items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">utm_term (키워드)</label>
-            <input
-              type="text"
-              value={utmTerm}
-              onChange={e => setUtmTerm(e.target.value)}
-              placeholder="검색어나 타겟 키워드 (예: 운동화 / 최대 50자)"
-              maxLength={50}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
             />
           </div>
 
           {/* utm_content */}
           <div className="grid grid-cols-[180px_1fr] items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">utm_content (세부항목)</label>
+            <label className="text-sm font-medium text-gray-700">
+              utm_content (세부항목) <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               value={utmContent}
@@ -401,6 +392,7 @@ export default function UTMForm({ onCreated }: Props) {
               placeholder="ad_대본번호 (예: ad_01 / 최대 50자)"
               maxLength={50}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
             />
           </div>
         </div>
@@ -409,7 +401,7 @@ export default function UTMForm({ onCreated }: Props) {
       <div className="flex justify-end">
         <button
           type="submit"
-          disabled={submitting || !title || !landingUrl || !effectiveSource || !effectiveMedium}
+          disabled={submitting || !title || !landingUrl || !effectiveSource || !effectiveMedium || !utmCampaign || !utmContent}
           className="px-6 py-2.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {submitting ? 'UTM 생성 중...' : 'UTM 태그 생성'}
