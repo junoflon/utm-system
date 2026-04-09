@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   const { action } = body;
 
   if (action === 'create') {
-    const { brand, name, tags, url, note } = body;
+    const { brand, name, tags, url, note, platform } = body;
     if (!brand || !name || !url) {
       return NextResponse.json({ error: '브랜드, 제품명, URL은 필수입니다.' }, { status: 400 });
     }
@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
       tags: tags || [],
       url,
       note: note || '',
+      platform: platform || '기타',
       active: true,
     };
     addProductUrl(item);
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
     const { items } = body;
     if (!Array.isArray(items)) return NextResponse.json({ error: 'items 배열이 필요합니다.' }, { status: 400 });
     for (const item of items) {
-      addProductUrl({ ...item, id: uuidv4(), active: true });
+      addProductUrl({ ...item, id: uuidv4(), platform: item.platform || '기타', active: true });
     }
     return NextResponse.json({ success: true, count: items.length });
   }

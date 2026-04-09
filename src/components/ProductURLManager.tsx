@@ -9,25 +9,41 @@ interface ProductUrl {
   tags: string[];
   url: string;
   note: string;
+  platform: string;
   active: boolean;
 }
 
 const BRANDS = ['지노큐어', '바디파인', '파인톱', '페아체도', '와이와이와이랩'];
+const PLATFORMS = ['전체', '메타', '구글', '기타'];
 
 export default function ProductURLManager() {
   const [allUrls, setAllUrls] = useState<ProductUrl[]>([]);
   const [selectedBrand, setSelectedBrand] = useState(BRANDS[0]);
+  const [selectedPlatform, setSelectedPlatform] = useState('전체');
   const [selectedTag, setSelectedTag] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<ProductUrl>>({});
   const [showAdd, setShowAdd] = useState(false);
-  const [newItem, setNewItem] = useState({ name: '', tags: '', url: '', note: '' });
+  const [newItem, setNewItem] = useState({ name: '', tags: '', url: '', note: '', platform: '메타' });
 
-  // All unique tags for the current brand
-  const tagOptions = Array.from(new Set(allUrls.flatMap(u => u.tags))).sort();
+  // Platform filtered
+  const platformFiltered = selectedPlatform === '전체'
+    ? allUrls
+    : allUrls.filter(u => u.platform === selectedPlatform);
+
+  // All unique tags for the current brand + platform
+  const tagOptions = Array.from(new Set(platformFiltered.flatMap(u => u.tags))).sort();
 
   // Filtered URLs
-  const urls = selectedTag ? allUrls.filter(u => u.tags.includes(selectedTag)) : allUrls;
+  const urls = selectedTag ? platformFiltered.filter(u => u.tags.includes(selectedTag)) : platformFiltered;
+
+  // Platform counts
+  const platformCounts: Record<string, number> = {
+    '전체': allUrls.length,
+    '메타': allUrls.filter(u => u.platform === '메타').length,
+    '구글': allUrls.filter(u => u.platform === '구글').length,
+    '기타': allUrls.filter(u => !u.platform || (u.platform !== '메타' && u.platform !== '구글')).length,
+  };
 
   const fetchUrls = useCallback(async () => {
     const res = await fetch(`/api/product-urls?brand=${encodeURIComponent(selectedBrand)}`);
@@ -35,7 +51,7 @@ export default function ProductURLManager() {
   }, [selectedBrand]);
 
   useEffect(() => { fetchUrls(); }, [fetchUrls]);
-  useEffect(() => { setSelectedTag(''); }, [selectedBrand]);
+  useEffect(() => { setSelectedTag(''); setSelectedPlatform('전체'); }, [selectedBrand]);
 
   const handleAdd = async () => {
     if (!newItem.name || !newItem.url) return;
@@ -49,9 +65,10 @@ export default function ProductURLManager() {
         tags: newItem.tags.split(',').map(t => t.trim()).filter(Boolean),
         url: newItem.url,
         note: newItem.note,
+        platform: newItem.platform,
       }),
     });
-    setNewItem({ name: '', tags: '', url: '', note: '' });
+    setNewItem({ name: '', tags: '', url: '', note: '', platform: '메타' });
     setShowAdd(false);
     fetchUrls();
   };
@@ -68,7 +85,7 @@ export default function ProductURLManager() {
 
   const startEdit = (item: ProductUrl) => {
     setEditingId(item.id);
-    setEditData({ name: item.name, tags: item.tags, url: item.url, note: item.note });
+    setEditData({ name: item.name, tags: item.tags, url: item.url, note: item.note, platform: item.platform });
   };
 
   const handleUpdate = async () => {
@@ -108,6 +125,27 @@ export default function ProductURLManager() {
         </div>
       </div>
 
+      {/* Platform tabs */}
+      <div className="bg-white rounded-lg border border-gray-200 p-3">
+        <div className="flex gap-2">
+          {PLATFORMS.map(p => (
+            platformCounts[p] > 0 || p === '전체' ? (
+              <button
+                key={p}
+                onClick={() => { setSelectedPlatform(p); setSelectedTag(''); }}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  selectedPlatform === p
+                    ? 'bg-gray-800 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {p} ({platformCounts[p]})
+              </button>
+            ) : null
+          ))}
+        </div>
+      </div>
+
       {/* Tag sub-filters */}
       {tagOptions.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200 p-3">
@@ -118,10 +156,10 @@ export default function ProductURLManager() {
                 !selectedTag ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              전체 ({allUrls.length})
+              전체 ({platformFiltered.length})
             </button>
             {tagOptions.map(tag => {
-              const count = allUrls.filter(u => u.tags.includes(tag)).length;
+              const count = platformFiltered.filter(u => u.tags.includes(tag)).length;
               return (
                 <button
                   key={tag}
@@ -160,6 +198,12 @@ export default function ProductURLManager() {
               placeholder="제품명 *" className="px-3 py-2 border border-gray-300 rounded-md text-sm" />
             <input type="text" value={newItem.url} onChange={e => setNewItem(n => ({ ...n, url: e.target.value }))}
               placeholder="URL *" className="px-3 py-2 border border-gray-300 rounded-md text-sm" />
+            <select value={newItem.platform} onChange={e => setNewItem(n => ({ ...n, platform: e.target.value }))}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white">
+              <option value="메타">메타</option>
+              <option value="구글">구글</option>
+              <option value="기타">기타</option>
+            </select>
             <input type="text" value={newItem.tags} onChange={e => setNewItem(n => ({ ...n, tags: e.target.value }))}
               placeholder="태그 (쉼표로 구분: 정상가격, 향소구)" className="px-3 py-2 border border-gray-300 rounded-md text-sm" />
             <input type="text" value={newItem.note} onChange={e => setNewItem(n => ({ ...n, note: e.target.value }))}

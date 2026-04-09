@@ -115,6 +115,7 @@ export interface ProductUrl {
   tags: string[];
   url: string;
   note: string;
+  platform: string;
   active: boolean;
 }
 
