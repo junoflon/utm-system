@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { UTM_SOURCES, UTM_MEDIUMS, UTM_SOURCE_LABELS, UTM_MEDIUM_LABELS } from '@/types/utm';
 
 interface Props {
@@ -12,6 +12,12 @@ export default function UTMForm({ onCreated }: Props) {
   const [landingUrl, setLandingUrl] = useState('');
   const [brand, setBrand] = useState('');
   const [product, setProduct] = useState('');
+  const [brandOptions, setBrandOptions] = useState<string[]>([]);
+  const [productOptions, setProductOptions] = useState<string[]>([]);
+  const [newBrand, setNewBrand] = useState('');
+  const [newProduct, setNewProduct] = useState('');
+  const [showNewBrand, setShowNewBrand] = useState(false);
+  const [showNewProduct, setShowNewProduct] = useState(false);
   const [utmSource, setUtmSource] = useState('');
   const [customSource, setCustomSource] = useState('');
   const [utmMedium, setUtmMedium] = useState('');
@@ -21,6 +27,39 @@ export default function UTMForm({ onCreated }: Props) {
   const [utmContent, setUtmContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const fetchOptions = useCallback(async () => {
+    const res = await fetch('/api/utm/filters');
+    if (res.ok) {
+      const data = await res.json();
+      setBrandOptions(data.brands || []);
+      setProductOptions(data.products || []);
+    }
+  }, []);
+
+  useEffect(() => { fetchOptions(); }, [fetchOptions]);
+
+  const handleAddBrand = () => {
+    if (!newBrand.trim()) return;
+    const trimmed = newBrand.trim();
+    if (!brandOptions.includes(trimmed)) {
+      setBrandOptions(prev => [...prev, trimmed]);
+    }
+    setBrand(trimmed);
+    setNewBrand('');
+    setShowNewBrand(false);
+  };
+
+  const handleAddProduct = () => {
+    if (!newProduct.trim()) return;
+    const trimmed = newProduct.trim();
+    if (!productOptions.includes(trimmed)) {
+      setProductOptions(prev => [...prev, trimmed]);
+    }
+    setProduct(trimmed);
+    setNewProduct('');
+    setShowNewProduct(false);
+  };
 
   const effectiveSource = utmSource === '_custom' ? customSource : utmSource;
   const effectiveMedium = utmMedium === '_custom' ? customMedium : utmMedium;
@@ -61,6 +100,8 @@ export default function UTMForm({ onCreated }: Props) {
         setTitle(''); setLandingUrl(''); setBrand(''); setProduct('');
         setUtmSource(''); setCustomSource(''); setUtmMedium(''); setCustomMedium('');
         setUtmCampaign(''); setUtmTerm(''); setUtmContent('');
+        setShowNewBrand(false); setShowNewProduct(false);
+        fetchOptions();
         onCreated();
       }
     } finally {
@@ -142,23 +183,83 @@ export default function UTMForm({ onCreated }: Props) {
         <div className="space-y-4">
           <div className="grid grid-cols-[180px_1fr] items-center gap-4">
             <label className="text-sm font-medium text-gray-700">브랜드</label>
-            <input
-              type="text"
-              value={brand}
-              onChange={e => setBrand(e.target.value)}
-              placeholder="브랜드명 (예: MyBrand)"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <div className="flex gap-2">
+              <select
+                value={brand}
+                onChange={e => {
+                  if (e.target.value === '_add') { setShowNewBrand(true); }
+                  else { setBrand(e.target.value); }
+                }}
+                className="flex-1 px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              >
+                <option value="">브랜드 선택</option>
+                {brandOptions.map(b => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+                <option value="_add">+ 새 브랜드 추가</option>
+              </select>
+              {showNewBrand && (
+                <>
+                  <input
+                    type="text"
+                    value={newBrand}
+                    onChange={e => setNewBrand(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddBrand())}
+                    placeholder="새 브랜드명"
+                    className="flex-1 px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    autoFocus
+                  />
+                  <button type="button" onClick={handleAddBrand}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors whitespace-nowrap">
+                    추가
+                  </button>
+                  <button type="button" onClick={() => { setShowNewBrand(false); setNewBrand(''); }}
+                    className="px-3 py-2 bg-gray-100 text-gray-600 rounded-md text-sm hover:bg-gray-200 transition-colors">
+                    취소
+                  </button>
+                </>
+              )}
+            </div>
           </div>
           <div className="grid grid-cols-[180px_1fr] items-center gap-4">
             <label className="text-sm font-medium text-gray-700">제품</label>
-            <input
-              type="text"
-              value={product}
-              onChange={e => setProduct(e.target.value)}
-              placeholder="제품명 (예: product_A)"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <div className="flex gap-2">
+              <select
+                value={product}
+                onChange={e => {
+                  if (e.target.value === '_add') { setShowNewProduct(true); }
+                  else { setProduct(e.target.value); }
+                }}
+                className="flex-1 px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              >
+                <option value="">제품 선택</option>
+                {productOptions.map(p => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+                <option value="_add">+ 새 제품 추가</option>
+              </select>
+              {showNewProduct && (
+                <>
+                  <input
+                    type="text"
+                    value={newProduct}
+                    onChange={e => setNewProduct(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddProduct())}
+                    placeholder="새 제품명"
+                    className="flex-1 px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    autoFocus
+                  />
+                  <button type="button" onClick={handleAddProduct}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors whitespace-nowrap">
+                    추가
+                  </button>
+                  <button type="button" onClick={() => { setShowNewProduct(false); setNewProduct(''); }}
+                    className="px-3 py-2 bg-gray-100 text-gray-600 rounded-md text-sm hover:bg-gray-200 transition-colors">
+                    취소
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </section>
