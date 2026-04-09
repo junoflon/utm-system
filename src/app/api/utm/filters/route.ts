@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDistinctValues } from '@/lib/store';
+import { getDistinctValues, getBrandProductMap } from '@/lib/store';
 
 export async function GET() {
   return NextResponse.json({
@@ -10,5 +10,6 @@ export async function GET() {
     contents: getDistinctValues('utmContent'),
     brands: getDistinctValues('brand'),
     products: getDistinctValues('product'),
+    brandProductMap: getBrandProductMap(),
   });
 }

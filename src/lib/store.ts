@@ -39,3 +39,18 @@ export function getDistinctValues(field: keyof UTMTag): string[] {
   const values = new Set(tags.map(t => t[field]).filter(Boolean));
   return Array.from(values) as string[];
 }
+
+export function getBrandProductMap(): Record<string, string[]> {
+  const tags = getAllTags();
+  const map: Record<string, Set<string>> = {};
+  for (const tag of tags) {
+    if (!tag.brand) continue;
+    if (!map[tag.brand]) map[tag.brand] = new Set();
+    if (tag.product) map[tag.brand].add(tag.product);
+  }
+  const result: Record<string, string[]> = {};
+  for (const [brand, products] of Object.entries(map)) {
+    result[brand] = Array.from(products);
+  }
+  return result;
+}

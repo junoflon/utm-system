@@ -13,7 +13,7 @@ export default function UTMForm({ onCreated }: Props) {
   const [brand, setBrand] = useState('');
   const [product, setProduct] = useState('');
   const [brandOptions, setBrandOptions] = useState<string[]>([]);
-  const [productOptions, setProductOptions] = useState<string[]>([]);
+  const [brandProductMap, setBrandProductMap] = useState<Record<string, string[]>>({});
   const [newBrand, setNewBrand] = useState('');
   const [newProduct, setNewProduct] = useState('');
   const [showNewBrand, setShowNewBrand] = useState(false);
@@ -28,34 +28,44 @@ export default function UTMForm({ onCreated }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const filteredProducts = brand ? (brandProductMap[brand] || []) : [];
+
   const fetchOptions = useCallback(async () => {
     const res = await fetch('/api/utm/filters');
     if (res.ok) {
       const data = await res.json();
       setBrandOptions(data.brands || []);
-      setProductOptions(data.products || []);
+      setBrandProductMap(data.brandProductMap || {});
     }
   }, []);
 
   useEffect(() => { fetchOptions(); }, [fetchOptions]);
+
+  const handleBrandChange = (value: string) => {
+    setBrand(value);
+    setProduct('');
+    setShowNewProduct(false);
+  };
 
   const handleAddBrand = () => {
     if (!newBrand.trim()) return;
     const trimmed = newBrand.trim();
     if (!brandOptions.includes(trimmed)) {
       setBrandOptions(prev => [...prev, trimmed]);
+      setBrandProductMap(prev => ({ ...prev, [trimmed]: [] }));
     }
-    setBrand(trimmed);
+    handleBrandChange(trimmed);
     setNewBrand('');
     setShowNewBrand(false);
   };
 
   const handleAddProduct = () => {
-    if (!newProduct.trim()) return;
+    if (!newProduct.trim() || !brand) return;
     const trimmed = newProduct.trim();
-    if (!productOptions.includes(trimmed)) {
-      setProductOptions(prev => [...prev, trimmed]);
-    }
+    setBrandProductMap(prev => ({
+      ...prev,
+      [brand]: [...(prev[brand] || []), trimmed].filter((v, i, a) => a.indexOf(v) === i),
+    }));
     setProduct(trimmed);
     setNewProduct('');
     setShowNewProduct(false);
@@ -132,7 +142,7 @@ export default function UTMForm({ onCreated }: Props) {
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
-              placeholder="태그를 구분할 수 있는 제목 (예: 네이버 검색광고 - 여름 세일 / 최대 100자)"
+              placeholder="광고 집행 이름과 동일하게 해주세요"
               maxLength={100}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
@@ -188,7 +198,7 @@ export default function UTMForm({ onCreated }: Props) {
                 value={brand}
                 onChange={e => {
                   if (e.target.value === '_add') { setShowNewBrand(true); }
-                  else { setBrand(e.target.value); }
+                  else { handleBrandChange(e.target.value); }
                 }}
                 className="flex-1 px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
               >
@@ -230,13 +240,14 @@ export default function UTMForm({ onCreated }: Props) {
                   if (e.target.value === '_add') { setShowNewProduct(true); }
                   else { setProduct(e.target.value); }
                 }}
-                className="flex-1 px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                disabled={!brand}
+                className="flex-1 px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
               >
-                <option value="">제품 선택</option>
-                {productOptions.map(p => (
+                <option value="">{brand ? '제품 선택' : '브랜드를 먼저 선택하세요'}</option>
+                {filteredProducts.map(p => (
                   <option key={p} value={p}>{p}</option>
                 ))}
-                <option value="_add">+ 새 제품 추가</option>
+                {brand && <option value="_add">+ 새 제품 추가</option>}
               </select>
               {showNewProduct && (
                 <>
