@@ -141,11 +141,11 @@ export default function ProductURLManager() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 font-medium text-gray-700 w-[250px]">제품명</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-700 w-[200px]">제품명</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-700">태그</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-700">URL</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-700 w-[150px]">메모</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-700 w-[180px]">관리</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-700 min-w-[300px]">URL</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-700 w-[100px]">메모</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-700 w-[150px]">관리</th>
               </tr>
             </thead>
             <tbody>
@@ -196,8 +196,8 @@ export default function ProductURLManager() {
                             ))}
                           </div>
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="text-xs text-gray-500 break-all">{item.url}</div>
+                        <td className="px-4 py-3" style={{ wordBreak: 'break-all' }}>
+                          <span className="text-xs text-gray-500">{item.url}</span>
                         </td>
                         <td className="px-4 py-3 text-gray-500 text-xs">{item.note || '-'}</td>
                         <td className="px-4 py-3">
