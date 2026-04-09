@@ -3,15 +3,24 @@
 import { useState } from 'react';
 import UTMForm from '@/components/UTMForm';
 import UTMList from '@/components/UTMList';
+import ProductURLManager from '@/components/ProductURLManager';
+
+type Tab = 'create' | 'list' | 'urls';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'create' | 'list'>('create');
+  const [activeTab, setActiveTab] = useState<Tab>('create');
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleCreated = () => {
     setRefreshKey(k => k + 1);
     setActiveTab('list');
   };
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: 'create', label: 'UTM 생성' },
+    { key: 'list', label: 'UTM 관리' },
+    { key: 'urls', label: '제품 URL' },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -26,36 +35,30 @@ export default function Home() {
       {/* Tabs */}
       <div className="max-w-7xl mx-auto px-6 pt-6">
         <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
-          <button
-            onClick={() => setActiveTab('create')}
-            className={`px-5 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'create'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            UTM 생성
-          </button>
-          <button
-            onClick={() => { setActiveTab('list'); setRefreshKey(k => k + 1); }}
-            className={`px-5 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'list'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            UTM 관리
-          </button>
+          {tabs.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => {
+                setActiveTab(tab.key);
+                if (tab.key === 'list') setRefreshKey(k => k + 1);
+              }}
+              className={`px-5 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === tab.key
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-6 py-6">
-        {activeTab === 'create' ? (
-          <UTMForm onCreated={handleCreated} />
-        ) : (
-          <UTMList refreshKey={refreshKey} />
-        )}
+        {activeTab === 'create' && <UTMForm onCreated={handleCreated} />}
+        {activeTab === 'list' && <UTMList refreshKey={refreshKey} />}
+        {activeTab === 'urls' && <ProductURLManager />}
       </main>
     </div>
   );

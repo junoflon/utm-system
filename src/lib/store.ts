@@ -104,6 +104,61 @@ export function deleteProduct(brandName: string, productName: string): Catalog {
   return catalog;
 }
 
+// --- Product URL management ---
+
+const PRODUCT_URLS_FILE = path.join(DATA_DIR, 'product-urls.json');
+
+export interface ProductUrl {
+  id: string;
+  brand: string;
+  name: string;
+  tags: string[];
+  url: string;
+  note: string;
+  active: boolean;
+}
+
+function ensureProductUrls(): ProductUrl[] {
+  ensureDataDir();
+  if (!fs.existsSync(PRODUCT_URLS_FILE)) {
+    fs.writeFileSync(PRODUCT_URLS_FILE, JSON.stringify([], null, 2));
+    return [];
+  }
+  return JSON.parse(fs.readFileSync(PRODUCT_URLS_FILE, 'utf-8'));
+}
+
+function saveProductUrls(urls: ProductUrl[]) {
+  ensureDataDir();
+  fs.writeFileSync(PRODUCT_URLS_FILE, JSON.stringify(urls, null, 2));
+}
+
+export function getAllProductUrls(): ProductUrl[] {
+  return ensureProductUrls();
+}
+
+export function addProductUrl(item: ProductUrl): void {
+  const urls = ensureProductUrls();
+  urls.push(item);
+  saveProductUrls(urls);
+}
+
+export function updateProductUrl(id: string, updates: Partial<ProductUrl>): ProductUrl | null {
+  const urls = ensureProductUrls();
+  const idx = urls.findIndex(u => u.id === id);
+  if (idx === -1) return null;
+  urls[idx] = { ...urls[idx], ...updates, id };
+  saveProductUrls(urls);
+  return urls[idx];
+}
+
+export function deleteProductUrl(id: string): boolean {
+  const urls = ensureProductUrls();
+  const filtered = urls.filter(u => u.id !== id);
+  if (filtered.length === urls.length) return false;
+  saveProductUrls(filtered);
+  return true;
+}
+
 export function getBrandProductMap(): Record<string, string[]> {
   const catalog = ensureCatalog();
   const result: Record<string, string[]> = {};
