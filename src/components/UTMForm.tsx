@@ -260,7 +260,7 @@ export default function UTMForm({ onCreated }: Props) {
               type="text"
               value={utmCampaign}
               onChange={e => setUtmCampaign(e.target.value)}
-              placeholder="캠페인 이름 (예: summer_sale_2026 / 최대 50자)"
+              placeholder="#캠페인번호_#광고세트번호 (예: #1-1_#1-2 / 최대 50자)"
               maxLength={50}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -286,7 +286,7 @@ export default function UTMForm({ onCreated }: Props) {
               type="text"
               value={utmContent}
               onChange={e => setUtmContent(e.target.value)}
-              placeholder="광고 소재나 위치 구분 (예: banner_300x250 / 최대 50자)"
+              placeholder="ad_대본번호 (예: ad_01 / 최대 50자)"
               maxLength={50}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />

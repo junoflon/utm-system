@@ -17,7 +17,7 @@ export interface UTMTag {
 }
 
 export const UTM_SOURCES = [
-  'google', 'youtube', 'instagram', 'facebook', 'tiktok',
+  'google', 'youtube', 'meta', 'tiktok',
   'naver', 'kakao', 'twitter', 'toss'
 ] as const;
 
@@ -30,8 +30,7 @@ export const UTM_MEDIUMS = [
 export const UTM_SOURCE_LABELS: Record<string, string> = {
   google: 'Google',
   youtube: 'YouTube',
-  instagram: 'Instagram',
-  facebook: 'Facebook',
+  meta: 'Meta',
   tiktok: 'TikTok',
   naver: 'Naver',
   kakao: 'Kakao',
