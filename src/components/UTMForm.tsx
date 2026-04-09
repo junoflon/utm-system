@@ -126,7 +126,7 @@ export default function UTMForm({ onCreated }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 overflow-hidden">
       {/* 기본 정보 */}
       <section className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-1">기본 정보</h2>
@@ -166,8 +166,8 @@ export default function UTMForm({ onCreated }: Props) {
             <label className="text-sm font-medium text-gray-700">
               생성된 URL 미리보기
             </label>
-            <div className="flex gap-2">
-              <div className="flex-1 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600 truncate">
+            <div className="flex gap-2 min-w-0">
+              <div className="flex-1 min-w-0 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600 truncate">
                 {generatedUrl || 'https://'}
               </div>
               {generatedUrl && (

@@ -7,7 +7,6 @@ interface Filters {
   source: string;
   medium: string;
   campaign: string;
-  term: string;
   content: string;
   brand: string;
   product: string;
@@ -17,7 +16,6 @@ interface FilterOptions {
   sources: string[];
   mediums: string[];
   campaigns: string[];
-  terms: string[];
   contents: string[];
   brands: string[];
   products: string[];
@@ -34,10 +32,10 @@ export default function UTMList({ refreshKey }: Props) {
   const [totalPages, setTotalPages] = useState(1);
   const [limit, setLimit] = useState(20);
   const [filters, setFilters] = useState<Filters>({
-    source: '', medium: '', campaign: '', term: '', content: '', brand: '', product: '',
+    source: '', medium: '', campaign: '', content: '', brand: '', product: '',
   });
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    sources: [], mediums: [], campaigns: [], terms: [], contents: [], brands: [], products: [],
+    sources: [], mediums: [], campaigns: [], contents: [], brands: [], products: [],
   });
 
   const fetchFilters = useCallback(async () => {
@@ -54,7 +52,6 @@ export default function UTMList({ refreshKey }: Props) {
       ...(filters.source && { source: filters.source }),
       ...(filters.medium && { medium: filters.medium }),
       ...(filters.campaign && { campaign: filters.campaign }),
-      ...(filters.term && { term: filters.term }),
       ...(filters.content && { content: filters.content }),
       ...(filters.brand && { brand: filters.brand }),
       ...(filters.product && { product: filters.product }),
@@ -70,6 +67,11 @@ export default function UTMList({ refreshKey }: Props) {
 
   useEffect(() => { fetchFilters(); }, [fetchFilters, refreshKey]);
   useEffect(() => { fetchTags(); }, [fetchTags, refreshKey]);
+
+  const updateFilter = (key: keyof Filters, value: string) => {
+    setFilters(f => ({ ...f, [key]: value }));
+    setPage(1);
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm('이 UTM 태그를 삭제하시겠습니까?')) return;
@@ -89,11 +91,6 @@ export default function UTMList({ refreshKey }: Props) {
     alert('URL이 클립보드에 복사되었습니다.');
   };
 
-  const handleSearch = () => {
-    setPage(1);
-    fetchTags();
-  };
-
   const formatDate = (iso: string) => {
     const d = new Date(iso);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -105,23 +102,17 @@ export default function UTMList({ refreshKey }: Props) {
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         <div className="flex flex-wrap gap-3 items-center">
           <FilterSelect label="브랜드 전체" value={filters.brand} options={filterOptions.brands}
-            onChange={v => setFilters(f => ({ ...f, brand: v }))} />
+            onChange={v => updateFilter('brand', v)} />
           <FilterSelect label="제품 전체" value={filters.product} options={filterOptions.products}
-            onChange={v => setFilters(f => ({ ...f, product: v }))} />
+            onChange={v => updateFilter('product', v)} />
           <FilterSelect label="채널 전체" value={filters.source} options={filterOptions.sources}
-            onChange={v => setFilters(f => ({ ...f, source: v }))} />
+            onChange={v => updateFilter('source', v)} />
           <FilterSelect label="유형 전체" value={filters.medium} options={filterOptions.mediums}
-            onChange={v => setFilters(f => ({ ...f, medium: v }))} />
+            onChange={v => updateFilter('medium', v)} />
           <FilterSelect label="캠페인 전체" value={filters.campaign} options={filterOptions.campaigns}
-            onChange={v => setFilters(f => ({ ...f, campaign: v }))} />
-          <FilterSelect label="키워드 전체" value={filters.term} options={filterOptions.terms}
-            onChange={v => setFilters(f => ({ ...f, term: v }))} />
+            onChange={v => updateFilter('campaign', v)} />
           <FilterSelect label="세부항목 전체" value={filters.content} options={filterOptions.contents}
-            onChange={v => setFilters(f => ({ ...f, content: v }))} />
-          <button onClick={handleSearch}
-            className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition-colors">
-            조회
-          </button>
+            onChange={v => updateFilter('content', v)} />
           <div className="ml-auto flex items-center gap-3">
             <span className="text-sm text-gray-600">{total} 건 조회됨</span>
             <select value={limit} onChange={e => { setLimit(Number(e.target.value)); setPage(1); }}
@@ -146,7 +137,6 @@ export default function UTMList({ refreshKey }: Props) {
                 <th className="text-left px-4 py-3 font-medium text-gray-700">채널 (source)</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-700">유형 (medium)</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-700">캠페인 (campaign)</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-700">키워드 (term)</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-700">세부항목 (content)</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-700">생성일</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-700">관리</th>
@@ -155,7 +145,7 @@ export default function UTMList({ refreshKey }: Props) {
             <tbody>
               {tags.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="text-center py-12 text-gray-400">
+                  <td colSpan={9} className="text-center py-12 text-gray-400">
                     등록된 UTM 태그가 없습니다.
                   </td>
                 </tr>
@@ -171,7 +161,6 @@ export default function UTMList({ refreshKey }: Props) {
                     <td className="px-4 py-3 text-gray-600">{tag.utmSource}</td>
                     <td className="px-4 py-3 text-gray-600">{tag.utmMedium}</td>
                     <td className="px-4 py-3 text-gray-600">{tag.utmCampaign || '-'}</td>
-                    <td className="px-4 py-3 text-gray-600">{tag.utmTerm || '-'}</td>
                     <td className="px-4 py-3 text-gray-600">{tag.utmContent || '-'}</td>
                     <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{formatDate(tag.createdAt)}</td>
                     <td className="px-4 py-3">

@@ -5,3 +5,8 @@ body {
   color: #111827;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
+
+/* Prevent grid children from overflowing */
+.grid > * {
+  min-width: 0;
+}
