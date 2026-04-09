@@ -2,7 +2,8 @@ import { UTMTag } from '@/types/utm';
 import fs from 'fs';
 import path from 'path';
 
-const DATA_FILE = path.join(process.cwd(), 'data', 'utm-tags.json');
+const DATA_DIR = fs.existsSync('/app/data') ? '/app/data' : path.join(process.cwd(), 'data');
+const DATA_FILE = path.join(DATA_DIR, 'utm-tags.json');
 
 function ensureDataDir() {
   const dir = path.dirname(DATA_FILE);
@@ -42,7 +43,7 @@ export function getDistinctValues(field: keyof UTMTag): string[] {
 
 // --- Brand/Product catalog (persistent) ---
 
-const CATALOG_FILE = path.join(process.cwd(), 'data', 'catalog.json');
+const CATALOG_FILE = path.join(DATA_DIR, 'catalog.json');
 
 interface Catalog {
   brands: { name: string; products: string[] }[];
