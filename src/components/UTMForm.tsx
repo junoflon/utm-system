@@ -12,8 +12,7 @@ export default function UTMForm({ onCreated }: Props) {
   const [landingUrl, setLandingUrl] = useState('');
   const [brand, setBrand] = useState('');
   const [product, setProduct] = useState('');
-  const [brandOptions, setBrandOptions] = useState<string[]>([]);
-  const [brandProductMap, setBrandProductMap] = useState<Record<string, string[]>>({});
+  const [catalog, setCatalog] = useState<{ brands: { name: string; products: string[] }[] }>({ brands: [] });
   const [newBrand, setNewBrand] = useState('');
   const [newProduct, setNewProduct] = useState('');
   const [showNewBrand, setShowNewBrand] = useState(false);
@@ -28,18 +27,17 @@ export default function UTMForm({ onCreated }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const filteredProducts = brand ? (brandProductMap[brand] || []) : [];
+  const brandOptions = catalog.brands.map(b => b.name);
+  const filteredProducts = brand
+    ? (catalog.brands.find(b => b.name === brand)?.products || [])
+    : [];
 
-  const fetchOptions = useCallback(async () => {
-    const res = await fetch('/api/utm/filters');
-    if (res.ok) {
-      const data = await res.json();
-      setBrandOptions(data.brands || []);
-      setBrandProductMap(data.brandProductMap || {});
-    }
+  const fetchCatalog = useCallback(async () => {
+    const res = await fetch('/api/catalog');
+    if (res.ok) setCatalog(await res.json());
   }, []);
 
-  useEffect(() => { fetchOptions(); }, [fetchOptions]);
+  useEffect(() => { fetchCatalog(); }, [fetchCatalog]);
 
   const handleBrandChange = (value: string) => {
     setBrand(value);
@@ -47,28 +45,43 @@ export default function UTMForm({ onCreated }: Props) {
     setShowNewProduct(false);
   };
 
-  const handleAddBrand = () => {
+  const catalogAction = async (action: string, brandName?: string, productName?: string) => {
+    const res = await fetch('/api/catalog', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, brand: brandName, product: productName }),
+    });
+    if (res.ok) setCatalog(await res.json());
+  };
+
+  const handleAddBrand = async () => {
     if (!newBrand.trim()) return;
     const trimmed = newBrand.trim();
-    if (!brandOptions.includes(trimmed)) {
-      setBrandOptions(prev => [...prev, trimmed]);
-      setBrandProductMap(prev => ({ ...prev, [trimmed]: [] }));
-    }
+    await catalogAction('addBrand', trimmed);
     handleBrandChange(trimmed);
     setNewBrand('');
     setShowNewBrand(false);
   };
 
-  const handleAddProduct = () => {
+  const handleDeleteBrand = async (name: string) => {
+    if (!confirm(`"${name}" 브랜드와 하위 제품을 모두 삭제하시겠습니까?`)) return;
+    await catalogAction('deleteBrand', name);
+    if (brand === name) { setBrand(''); setProduct(''); }
+  };
+
+  const handleAddProduct = async () => {
     if (!newProduct.trim() || !brand) return;
     const trimmed = newProduct.trim();
-    setBrandProductMap(prev => ({
-      ...prev,
-      [brand]: [...(prev[brand] || []), trimmed].filter((v, i, a) => a.indexOf(v) === i),
-    }));
+    await catalogAction('addProduct', brand, trimmed);
     setProduct(trimmed);
     setNewProduct('');
     setShowNewProduct(false);
+  };
+
+  const handleDeleteProduct = async (productName: string) => {
+    if (!confirm(`"${productName}" 제품을 삭제하시겠습니까?`)) return;
+    await catalogAction('deleteProduct', brand, productName);
+    if (product === productName) setProduct('');
   };
 
   const effectiveSource = utmSource === '_custom' ? customSource : utmSource;
@@ -110,7 +123,6 @@ export default function UTMForm({ onCreated }: Props) {
         setUtmSource(''); setCustomSource(''); setUtmMedium(''); setCustomMedium('');
         setUtmCampaign(''); setUtmContent('');
         setShowNewBrand(false); setShowNewProduct(false);
-        fetchOptions();
         onCreated();
       }
     } finally {
@@ -207,6 +219,12 @@ export default function UTMForm({ onCreated }: Props) {
                 ))}
                 <option value="_add">+ 새 브랜드 추가</option>
               </select>
+              {brand && (
+                <button type="button" onClick={() => handleDeleteBrand(brand)}
+                  className="px-3 py-2 bg-red-50 hover:bg-red-100 rounded-md text-sm text-red-600 transition-colors whitespace-nowrap">
+                  삭제
+                </button>
+              )}
               {showNewBrand && (
                 <>
                   <input
@@ -248,6 +266,12 @@ export default function UTMForm({ onCreated }: Props) {
                 ))}
                 {brand && <option value="_add">+ 새 제품 추가</option>}
               </select>
+              {product && (
+                <button type="button" onClick={() => handleDeleteProduct(product)}
+                  className="px-3 py-2 bg-red-50 hover:bg-red-100 rounded-md text-sm text-red-600 transition-colors whitespace-nowrap">
+                  삭제
+                </button>
+              )}
               {showNewProduct && (
                 <>
                   <input
